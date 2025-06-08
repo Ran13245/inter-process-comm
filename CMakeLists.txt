@@ -17,3 +17,14 @@ option(BUILD_UNIT_TESTS "Build unit tests" ON)
 if(BUILD_UNIT_TESTS)
     add_subdirectory(ut)
 endif()
+
+include(FetchContent)
+
+FetchContent_Declare(
+  asio
+  GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+  GIT_TAG asio-1-28-0  
+)
+FetchContent_MakeAvailable(asio)
+
+include_directories(${asio_SOURCE_DIR}/asio/include)
