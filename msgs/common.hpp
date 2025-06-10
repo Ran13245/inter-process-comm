@@ -20,3 +20,8 @@ enum ParserType {
   DirectReceiver = 2,
   DirectSender   = 3
 };
+
+enum class ChannelMode {
+    UDP,
+    UnixDomain
+};

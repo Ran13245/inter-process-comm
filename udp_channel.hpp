@@ -23,14 +23,16 @@
 #include "itc/MsgQueue.hpp"
 
 template <typename T>
-concept ValidParser = true;
+concept ValidParser = requires {
+    typename T::DataType;  
+};
 
-template <ValidParser... Parsers>
-class UdpChannel {
+template <ChannelMode Mode = ChannelMode::UDP, ValidParser... Parsers>
+class CommChannel {
 public:
-  UdpChannel() = delete;
+  CommChannel() = delete;
 
-  UdpChannel(asio::io_context &io_context, std::string local_ip, int local_port,
+  CommChannel(asio::io_context &io_context, std::string local_ip, int local_port,
              std::string remote_ip, int remote_port)
       : local_endpoint_(asio::ip::make_address(local_ip), local_port),
         remote_endpoint_(asio::ip::make_address(remote_ip), remote_port),
@@ -61,7 +63,7 @@ public:
 
     asio::ip::udp::endpoint tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), remote_endpoint_,
-                                     std::bind(&UdpChannel::receiver_handler, this,
+                                     std::bind(&CommChannel::receiver_handler, this,
                                                std::placeholders::_1, std::placeholders::_2));
     return true;
   }
@@ -75,7 +77,7 @@ public:
                                != send_mq_vec_.end()))
                           || ...);
     if (!mq_registered) return false;
-    timer_.async_wait(std::bind(&UdpChannel::timer_handler, this, std::placeholders::_1));
+    timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
     return true;
   }
 
@@ -108,7 +110,7 @@ private:
       if (loop_cnt >= send_mq_vec_.size()) loop_cnt = 0;
     }
     timer_.expires_after(asio::chrono::milliseconds(1));
-    timer_.async_wait(std::bind(&UdpChannel::timer_handler, this, std::placeholders::_1));
+    timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
     return;
   }
 
@@ -141,7 +143,7 @@ private:
     }
     asio::ip::udp::endpoint tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), tmp_endpoint,
-                                     std::bind(&UdpChannel::receiver_handler, this,
+                                     std::bind(&CommChannel::receiver_handler, this,
                                                std::placeholders::_1, std::placeholders::_2));
   }
 

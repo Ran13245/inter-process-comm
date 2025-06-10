@@ -9,7 +9,7 @@
 #include <thread>
 TEST_CASE("udp channel") {
   asio::io_context io_context;
-  UdpChannel<DummySender, DummyReceiver> channel(io_context, "127.0.0.1", 12345, "127.0.0.1",
+  CommChannel<ChannelMode::UDP, DummySender, DummyReceiver> channel(io_context, "127.0.0.1", 12345, "127.0.0.1",
                                                  12345);
   //   channel.bind_message_queue("dummy_msg", 0, mq);
   MsgQueue send_mq(RingBuffer<dummy_msg>{10});
