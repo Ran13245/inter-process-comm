@@ -1,13 +1,13 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "itc/backend/RingBuf.hpp"
-#include "udp_channel.hpp"
+#include "comm_channel.hpp"
 #include "dummy_msg/dummy_receiver.hpp"
 #include "dummy_msg/dummy_sender.hpp"
 #include "dummy_msg/dummy_msg.h"
 
 #include <thread>
-TEST_CASE("udp channel") {
+TEST_CASE("comm channel") {
   asio::io_context io_context;
   CommChannel<ChannelMode::UDP, DummySender, DummyReceiver> channel(io_context, "127.0.0.1", 12345, "127.0.0.1",
                                                  12345);
