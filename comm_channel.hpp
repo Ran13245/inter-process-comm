@@ -15,6 +15,7 @@
 #pragma once
 
 #include <span>
+#include <variant>
 #include <unordered_map>
 #include <utility>
 #include <asio.hpp>
@@ -24,20 +25,48 @@
 
 template <typename T>
 concept ValidParser = requires {
-    typename T::DataType;  
-};
+  typename T::DataType;
+  { T::parser_type } -> std::convertible_to<uint8_t>;
+  { T::header } -> std::convertible_to<uint16_t>;
+  { T::length } -> std::convertible_to<size_t>;
+  { T::name } -> std::convertible_to<std::string_view>;
+}
+&&((requires(std::span<std::byte> in, typename T::DataType out) {
+  { T::Process(in, out) } -> std::same_as<void>;
+}) || (requires(typename T::DataType in, std::span<std::byte> out) {
+  { T::Process(in, out) } -> std::same_as<void>;
+}));
 
 template <ChannelMode Mode = ChannelMode::UDP, ValidParser... Parsers>
 class CommChannel {
+  using UdpSocket  = asio::ip::udp::socket;
+  using UnixSocket = asio::local::datagram_protocol::socket;
+
+  using UdpEp  = asio::ip::udp::endpoint;
+  using UnixEp = asio::local::datagram_protocol::endpoint;
+
+  using SocketType   = std::conditional_t<Mode == ChannelMode::Unix, UnixSocket, UdpSocket>;
+  using EndpointType = std::conditional_t<Mode == ChannelMode::Unix, UnixEp, UdpEp>;
+
 public:
   CommChannel() = delete;
 
   CommChannel(asio::io_context &io_context, std::string local_ip, int local_port,
-             std::string remote_ip, int remote_port)
+              std::string remote_ip, int remote_port) requires(Mode == ChannelMode::UDP)
       : local_endpoint_(asio::ip::make_address(local_ip), local_port),
         remote_endpoint_(asio::ip::make_address(remote_ip), remote_port),
         socket_(io_context, asio::ip::udp::v4()),
         timer_(io_context) {
+    socket_.bind(local_endpoint_);
+  }
+
+  CommChannel(asio::io_context &io_context, std::string_view local_path,
+              std::string_view remote_path) requires(Mode == ChannelMode::Unix)
+      : local_endpoint_(createEp(local_path)),
+        remote_endpoint_(createEp(remote_path)),
+        socket_(io_context),
+        timer_(io_context) {
+    socket_.open();
     socket_.bind(local_endpoint_);
   }
 
@@ -61,7 +90,7 @@ public:
                           || ...);
     if (!mq_registered) return false;
 
-    asio::ip::udp::endpoint tmp_endpoint = remote_endpoint_;
+    EndpointType tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), remote_endpoint_,
                                      std::bind(&CommChannel::receiver_handler, this,
                                                std::placeholders::_1, std::placeholders::_2));
@@ -80,6 +109,8 @@ public:
     timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
     return true;
   }
+
+  void set_loop_rate(uint32_t rate) { loop_rate = rate; }
 
 private:
   void timer_handler(const asio::error_code &ec) {
@@ -109,7 +140,7 @@ private:
       // reset counter
       if (loop_cnt >= send_mq_vec_.size()) loop_cnt = 0;
     }
-    timer_.expires_after(asio::chrono::milliseconds(1));
+    timer_.expires_after(asio::chrono::microseconds(loop_rate));
     timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
     return;
   }
@@ -139,18 +170,23 @@ private:
         return true;
       }() || ...);
 
-      // do alert here
+      //TODO: Add warning here
     }
-    asio::ip::udp::endpoint tmp_endpoint = remote_endpoint_;
+    EndpointType tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), tmp_endpoint,
                                      std::bind(&CommChannel::receiver_handler, this,
                                                std::placeholders::_1, std::placeholders::_2));
   }
 
+  static UnixEp createEp(std::string_view sv) requires(Mode == ChannelMode::Unix) {
+    std::remove(std::string(sv).c_str());
+    return UnixEp(sv);
+  }
+
   asio::steady_timer timer_;
-  asio::ip::udp::socket socket_;
-  asio::ip::udp::endpoint local_endpoint_;
-  asio::ip::udp::endpoint remote_endpoint_;
+  SocketType socket_;
+  EndpointType local_endpoint_;
+  EndpointType remote_endpoint_;
 
   std::vector<std::pair<std::string_view, MsgQueue *>> send_mq_vec_;
   std::unordered_map<std::string_view, MsgQueue *> recv_mq_map_;
@@ -158,4 +194,5 @@ private:
   std::array<std::byte, 1500> recv_buffer_;
 
   uint32_t loop_cnt = 0;
+  uint32_t loop_rate = 1000;
 };

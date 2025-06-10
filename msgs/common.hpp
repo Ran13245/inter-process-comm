@@ -23,5 +23,5 @@ enum ParserType {
 
 enum class ChannelMode {
     UDP,
-    UnixDomain
+    Unix
 };
