@@ -14,10 +14,6 @@ endif()
 
 option(BUILD_UNIT_TESTS "Build unit tests" ON)
 
-if(BUILD_UNIT_TESTS)
-    add_subdirectory(ut)
-endif()
-
 include(FetchContent)
 
 FetchContent_Declare(
@@ -28,3 +24,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(asio)
 
 include_directories(${asio_SOURCE_DIR}/asio/include)
+
+if(BUILD_UNIT_TESTS)
+    add_subdirectory(ut)
+endif()
+
