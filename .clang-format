@@ -15,4 +15,5 @@
   BreakBeforeTernaryOperators: 'true'
   AllowShortLambdasOnASingleLine: Inline
   SortIncludes: false
+  AllowShortEnumsOnASingleLine: false
 
