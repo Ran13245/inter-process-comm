@@ -32,10 +32,11 @@ concept ValidParser = requires {
   { T::name } -> std::convertible_to<std::string_view>;
 }
 &&((requires(std::span<std::byte> in, typename T::DataType out) {
-  { T::Process(in, out) } -> std::same_as<void>;
-}) || (requires(typename T::DataType in, std::span<std::byte> out) {
-  { T::Process(in, out) } -> std::same_as<void>;
-}));
+     { T::Process(in, out) } -> std::same_as<void>;
+   })
+   || (requires(typename T::DataType in, std::span<std::byte> out) {
+        { T::Process(in, out) } -> std::same_as<void>;
+      }));
 
 template <ChannelMode Mode = ChannelMode::UDP, ValidParser... Parsers>
 class CommChannel {
@@ -51,8 +52,8 @@ class CommChannel {
 public:
   CommChannel() = delete;
 
-  CommChannel(asio::io_context &io_context, std::string local_ip, int local_port,
-              std::string remote_ip, int remote_port) requires(Mode == ChannelMode::UDP)
+  CommChannel(asio::io_context &io_context, std::string local_ip, int local_port, std::string remote_ip,
+              int remote_port) requires(Mode == ChannelMode::UDP)
       : local_endpoint_(asio::ip::make_address(local_ip), local_port),
         remote_endpoint_(asio::ip::make_address(remote_ip), remote_port),
         socket_(io_context, asio::ip::udp::v4()),
@@ -60,12 +61,8 @@ public:
     socket_.bind(local_endpoint_);
   }
 
-  CommChannel(asio::io_context &io_context, std::string_view local_path,
-              std::string_view remote_path) requires(Mode == ChannelMode::Unix)
-      : local_endpoint_(createEp(local_path)),
-        remote_endpoint_(createEp(remote_path)),
-        socket_(io_context),
-        timer_(io_context) {
+  CommChannel(asio::io_context &io_context, std::string_view local_path, std::string_view remote_path) requires(Mode == ChannelMode::Unix)
+      : local_endpoint_(createEp(local_path)), remote_endpoint_(createEp(remote_path)), socket_(io_context), timer_(io_context) {
     socket_.open();
     socket_.bind(local_endpoint_);
   }
@@ -85,26 +82,20 @@ public:
 
   bool enable_receiver() {
     // do bind checking
-    bool mq_registered = (((Parsers::parser_type == ParserType::Receiver)
-                           && (recv_mq_map_.find(Parsers::name) != recv_mq_map_.end()))
-                          || ...);
+    bool mq_registered = (((Parsers::parser_type == ParserType::Receiver) && (recv_mq_map_.find(Parsers::name) != recv_mq_map_.end())) || ...);
     if (!mq_registered) return false;
 
     EndpointType tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), remote_endpoint_,
-                                     std::bind(&CommChannel::receiver_handler, this,
-                                               std::placeholders::_1, std::placeholders::_2));
+                                     std::bind(&CommChannel::receiver_handler, this, std::placeholders::_1, std::placeholders::_2));
     return true;
   }
 
   bool enable_sender() {
-    bool mq_registered = (((Parsers::parser_type == ParserType::Sender)
-                           && (std::ranges::find_if(send_mq_vec_,
-                                                    [](const auto &curr_mq) {
-                                                      return curr_mq.first == Parsers::name;
-                                                    })
-                               != send_mq_vec_.end()))
-                          || ...);
+    bool mq_registered
+        = (((Parsers::parser_type == ParserType::Sender)
+            && (std::ranges::find_if(send_mq_vec_, [](const auto &curr_mq) { return curr_mq.first == Parsers::name; }) != send_mq_vec_.end()))
+           || ...);
     if (!mq_registered) return false;
     timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
     return true;
@@ -118,23 +109,21 @@ private:
       auto curr_mq = send_mq_vec_[loop_cnt];
       if (!curr_mq.second->empty()) {
         std::span<std::byte> buffer_view(this->send_buffer_);
-        bool matched
-            = (([this, &curr_mq, &buffer_view]() -> bool {
-                 if constexpr (Parsers::parser_type == ParserType::Sender) {
-                   if (curr_mq.first == Parsers::name) {
-                     typename Parsers::DataType data;
-                     curr_mq.second->dequeue(data);
-                     Parsers::Process(data, buffer_view);
-                     this->socket_.async_send_to(
-                         asio::buffer(this->send_buffer_), this->remote_endpoint_,
-                         [](const asio::error_code &error, std::size_t bytes_transferred) {});
-                     return true;
-                   } else
-                     return false;
-                 }
-                 return false;
-               }())
-               || ...);
+        bool matched = (([this, &curr_mq, &buffer_view]() -> bool {
+                          if constexpr (Parsers::parser_type == ParserType::Sender) {
+                            if (curr_mq.first == Parsers::name) {
+                              typename Parsers::DataType data;
+                              curr_mq.second->dequeue(data);
+                              Parsers::Process(data, buffer_view);
+                              this->socket_.async_send_to(asio::buffer(this->send_buffer_), this->remote_endpoint_,
+                                                          [](const asio::error_code &error, std::size_t bytes_transferred) {});
+                              return true;
+                            } else
+                              return false;
+                          }
+                          return false;
+                        }())
+                        || ...);
       }
       loop_cnt++;
       // reset counter
@@ -170,12 +159,11 @@ private:
         return true;
       }() || ...);
 
-      //TODO: Add warning here
+      // TODO: Add warning here
     }
     EndpointType tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), tmp_endpoint,
-                                     std::bind(&CommChannel::receiver_handler, this,
-                                               std::placeholders::_1, std::placeholders::_2));
+                                     std::bind(&CommChannel::receiver_handler, this, std::placeholders::_1, std::placeholders::_2));
   }
 
   static UnixEp createEp(std::string_view sv) requires(Mode == ChannelMode::Unix) {
@@ -193,6 +181,6 @@ private:
   std::array<std::byte, 1500> send_buffer_;
   std::array<std::byte, 1500> recv_buffer_;
 
-  uint32_t loop_cnt = 0;
+  uint32_t loop_cnt  = 0;
   uint32_t loop_rate = 1000;
 };
