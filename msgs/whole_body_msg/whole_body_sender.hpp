@@ -72,7 +72,7 @@ struct WholeBodySender {
     tmp_32bits = Encode2D<float, 16>(in.left_grip, in.right_grip);
     memcpy(&out[72], &tmp_32bits, sizeof(uint32_t));
     // CRC
-    uint16_t crc = CRC::CalculateBits(out.data(), 74, CRC::CRC_16_KERMIT());
+    uint16_t crc = CRC::CalculateBits(out.data(), 76, CRC::CRC_16_KERMIT());
     memcpy(&out[76], &crc, sizeof(uint16_t));
     // total 78 bytes
     return;
