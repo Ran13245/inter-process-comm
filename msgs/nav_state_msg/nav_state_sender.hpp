@@ -26,7 +26,7 @@ struct NavStateSender {
   static constexpr size_t length         = 54;
   static constexpr std::string_view name = "nav_state_sender";
 
-  static constexpr void Process(const DataType& in, std::span<std::byte>& out) {
+  static inline void Process(const DataType& in, std::span<std::byte>& out) {
     constexpr float m_PI = 3.14159265358979323846f;
     uint32_t tmp_32bits;
     memcpy(&out[0], &header, sizeof(uint16_t));
