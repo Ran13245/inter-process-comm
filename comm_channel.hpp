@@ -138,7 +138,8 @@ private:
     if (!ec && bytes_transferred > 0) {
       std::span<std::byte> buffer_view(this->recv_buffer_);
 
-      uint16_t header = *reinterpret_cast<uint16_t *>(buffer_view.data());
+      uint16_t header;
+      memcpy(&header, buffer_view.data(), sizeof(uint16_t));
 
       bool matched = ([this, header, &buffer_view]() -> bool {
         typename Parsers::DataType recv_data;
