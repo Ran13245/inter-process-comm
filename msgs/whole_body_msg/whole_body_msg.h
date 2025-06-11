@@ -8,7 +8,7 @@ struct whole_body_msg {
   // disable: 0
   // Control Enable | base control | left hand control | right hand control | base vel valid | left hand vel valid | right hand vel valid |
   // padding
-  uint8_t mask;
+  uint16_t mask;
   uint32_t cnt;
   uint64_t time;        // timestamp unit: ns
 
@@ -30,4 +30,4 @@ struct whole_body_msg {
   vec4 right_hand_ang_vel;  // relative angular velocity of right hand in FLU coordinate
 
   float left_grip, right_grip;
-}
+};
