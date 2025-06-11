@@ -89,7 +89,7 @@ static inline auto EncodeQuaternion(const ScalarType* data) {
   size_t idx                  = maxAbsIndex<ScalarType, 4>(data);
   std::array<ScalarType, 3> rest_data;
   ScalarType sign = data[idx] >= 0 ? 1.0 : -1.0;
-  for (size_t i = 0, j = 0; i < 3; ++i) {
+  for (size_t i = 0, j = 0; i < 4; ++i) {
     if (i == idx) continue;
     rest_data[j++] = sign * data[i];
   }
@@ -103,16 +103,14 @@ static inline auto DecodeQuaternion(const uint32_t data, ScalarType* quat) -> vo
   std::array<ScalarType, 3> recv_data;
   size_t idx                                         = data >> 30;
   std::tie(recv_data[0], recv_data[1], recv_data[2]) = Decode3D<ScalarType, 10>(data, maxAbs);
-  ScalarType maxFp                                   = sqrt(1 - fp1 * fp1 - fp2 * fp2 - fp3 * fp3);
-  maxFp                                              = maxFp >= 1.0 ? 1.0 : maxFp;
-  for (size_t i = 0, j = 0; i < 3; ++i) {
+  ScalarType maxFp = sqrt(1 - recv_data[0] * recv_data[0] - recv_data[1] * recv_data[1] - recv_data[2] * recv_data[2]);
+  maxFp            = maxFp >= 1.0 ? 1.0 : maxFp;
+  for (size_t i = 0, j = 0; i < 4; ++i) {
     if (i == idx) {
       quat[i] = maxFp;
     } else {
       quat[i] = recv_data[j++];
     }
-    quat[i] = recv_data[i] / maxFp;
   }
   return;
 }
-
