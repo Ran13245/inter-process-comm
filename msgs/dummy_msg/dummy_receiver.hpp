@@ -24,8 +24,8 @@ struct DummyReceiver {
   static constexpr size_t length         = 6;
   static constexpr std::string_view name = "dummy_receiver";
 
-  static constexpr void Process(const std::span<std::byte>& in, DataType& out) {
+  static constexpr bool Process(const std::span<std::byte>& in, DataType& out) {
     // Dummy Process
-    return;
+    return true;
   }
 };

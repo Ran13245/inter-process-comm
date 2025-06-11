@@ -32,7 +32,7 @@ concept ValidParser = requires {
   { T::name } -> std::convertible_to<std::string_view>;
 }
 &&((requires(std::span<std::byte> in, typename T::DataType out) {
-     { T::Process(in, out) } -> std::same_as<void>;
+     { T::Process(in, out) } -> std::same_as<bool>;
    })
    || (requires(typename T::DataType in, std::span<std::byte> out) {
         { T::Process(in, out) } -> std::same_as<void>;
