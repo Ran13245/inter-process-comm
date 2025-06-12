@@ -88,7 +88,7 @@ public:
     bool mq_registered = (((Parsers::parser_type == ParserType::Receiver) && (recv_mq_map_.find(Parsers::name) != recv_mq_map_.end())) || ...);
     if (!mq_registered) return false;
 
-    EndpointType tmp_endpoint = remote_endpoint_;
+    tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), remote_endpoint_,
                                      std::bind(&CommChannel::receiver_handler, this, std::placeholders::_1, std::placeholders::_2));
     return true;
@@ -176,7 +176,7 @@ private:
 
       // TODO: Add warning here
     }
-    EndpointType tmp_endpoint = remote_endpoint_;
+    tmp_endpoint = remote_endpoint_;
     this->socket_.async_receive_from(asio::buffer(recv_buffer_), tmp_endpoint,
                                      std::bind(&CommChannel::receiver_handler, this, std::placeholders::_1, std::placeholders::_2));
   }
@@ -190,6 +190,7 @@ private:
   SocketType socket_;
   EndpointType local_endpoint_;
   EndpointType remote_endpoint_;
+  EndpointType tmp_endpoint_;
 
   std::vector<std::pair<std::string_view, MsgQueue *>> send_mq_vec_;
   std::unordered_map<std::string_view, MsgQueue *> recv_mq_map_;
