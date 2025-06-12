@@ -26,11 +26,14 @@
 template <typename T>
 concept ValidParser = requires {
   typename T::DataType;
-  { T::parser_type } -> std::convertible_to<uint8_t>;
-  { T::header } -> std::convertible_to<uint16_t>;
-  { T::length } -> std::convertible_to<size_t>;
-  { T::name } -> std::convertible_to<std::string_view>;
+  {T::parser_type};
+  {T::header};
+  {T::length};
+  {T::name};
 }
+&&std::is_convertible_v<decltype(T::parser_type), uint8_t>
+&&std::is_convertible_v<decltype(T::header), uint16_t>
+&&std::is_convertible_v<decltype(T::name), std::string_view>
 &&((requires(std::span<std::byte> in, typename T::DataType out) {
      { T::Process(in, out) } -> std::same_as<bool>;
    })
@@ -94,7 +97,8 @@ public:
   bool enable_sender() {
     bool mq_registered
         = (((Parsers::parser_type == ParserType::Sender)
-            && (std::ranges::find_if(send_mq_vec_, [](const auto &curr_mq) { return curr_mq.first == Parsers::name; }) != send_mq_vec_.end()))
+            && (std::find_if(send_mq_vec_.begin(), send_mq_vec_.end(), [](const auto &curr_mq) { return curr_mq.first == Parsers::name; })
+                != send_mq_vec_.end()))
            || ...);
     if (!mq_registered) return false;
     timer_.async_wait(std::bind(&CommChannel::timer_handler, this, std::placeholders::_1));
