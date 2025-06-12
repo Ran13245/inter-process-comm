@@ -14,4 +14,4 @@
 
 #pragma once
 
-using pcd_msg = std::span<std::byte>;
+using cloud_msg = std::span<std::byte>;
