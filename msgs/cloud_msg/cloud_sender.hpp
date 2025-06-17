@@ -26,7 +26,7 @@ struct CloudSender {
   static constexpr std::string_view name = "cloud_sender";
 
   static constexpr void Process(const DataType& in, std::span<std::byte>& out) {  //! unused
-    out = in;
+    memcpy(out.data(), in.data(), length);
     return;
   }
 };
