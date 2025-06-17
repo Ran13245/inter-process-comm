@@ -18,16 +18,15 @@
 #include "cloud_msg.h"
 
 struct CloudSender {
-  using DataType                         = cloud_msg;
-  static constexpr uint8_t parser_type   = ParserType::DirectSender;
-  static constexpr uint16_t header       = 0xD0FD;
-  static constexpr size_t length         = 1356; 
-  //warning!!! length = PointPacket<CompressedPoint, PACKET_MTU>::TotalByte,	ralated to PACKET_MTU = 1400
+  using DataType                       = cloud_msg;
+  static constexpr uint8_t parser_type = ParserType::Sender;
+  static constexpr uint16_t header     = 0xD0FD;
+  static constexpr size_t length       = 1356;
+  // warning!!! length = PointPacket<CompressedPoint, PACKET_MTU>::TotalByte,	ralated to PACKET_MTU = 1400
   static constexpr std::string_view name = "cloud_sender";
 
-  static constexpr void Process(const DataType& in, std::span<std::byte>& out) {//! unused
-//     std::memcpy(out.data(), &header, 2);
-//     std::memcpy(out.data() + 2, &in, 4);
+  static constexpr void Process(const DataType& in, std::span<std::byte>& out) {  //! unused
+    out = in;
     return;
   }
 };
