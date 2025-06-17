@@ -16,16 +16,18 @@
 
 #include "../common.hpp"
 #include "cloud_msg.h"
+#include <memory>
 
 struct CloudReceiver {
-  using DataType                         = cloud_msg;
+  using DataType                         = std::shared_ptr<cloud_msg>;
   static constexpr uint8_t parser_type   = ParserType::Receiver;
   static constexpr uint16_t header       = 0xD0FD;
   static constexpr size_t length         = 1356;
   static constexpr std::string_view name = "cloud_receiver";
 
   static inline bool Process(const std::span<std::byte>& in, DataType& out) {
-    memcpy(out.data(), in.data(), length);
+    out = std::make_shared<cloud_msg>();
+    memcpy(out->data(), in.data(), length);
     return true;
   }
 };

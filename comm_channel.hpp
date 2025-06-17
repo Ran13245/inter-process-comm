@@ -129,7 +129,7 @@ private:
                               typename Parsers::DataType data;
                               curr_mq.second->dequeue(data);
                               // Parsers::Process(data, buffer_view);
-                              this->socket_.async_send_to(asio::buffer(data, Parsers::length), this->remote_endpoint_,
+                              this->socket_.async_send_to(asio::buffer(data), this->remote_endpoint_,
                                                           [](const asio::error_code &error, std::size_t bytes_transferred) {});
                               return true;
                             } else
