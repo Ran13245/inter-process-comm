@@ -19,14 +19,15 @@
 #include <memory>
 
 struct CloudReceiver {
-  using DataType                         = std::shared_ptr<cloud_msg>;
+  using DataType                         = std::shared_ptr<std::vector<std::byte>>;
   static constexpr uint8_t parser_type   = ParserType::Receiver;
   static constexpr uint16_t header       = 0xD0FD;
   static constexpr size_t length         = 1356;
   static constexpr std::string_view name = "cloud_receiver";
 
   static inline bool Process(const std::span<std::byte>& in, DataType& out) {
-    out = std::make_shared<cloud_msg>();
+    out = std::make_shared<std::vector<std::byte>>();
+    out->resize(length);
     memcpy(out->data(), in.data(), length);
     return true;
   }
