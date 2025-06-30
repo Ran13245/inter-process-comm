@@ -58,7 +58,7 @@ struct NavStateReceiver {
     std::tie(out.right_joints[3], out.right_joints[4], out.right_joints[5]) = Decode3D<float, 10>(tmp_32bits, m_PI);
     // force feedback
     memcpy(&tmp_32bits, &in[48], sizeof(uint32_t));
-    std::tie(out.left_forece, out.right_force) = Decode2D<float, 16>(tmp_32bits);
+    std::tie(out.left_force, out.right_force) = Decode2D<float, 16>(tmp_32bits);
     return true;
   }
 };
