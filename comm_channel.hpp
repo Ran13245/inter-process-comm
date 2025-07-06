@@ -161,7 +161,7 @@ private:
           if (header == Parsers::header) {
             Parsers::Process(buffer_view, recv_data);
           } else {
-            std::cout<<header<<std::endl;
+            std::cerr<<"Header Match Failed! received: "<<header<<std::endl;
             return false;
           }
         } else {

@@ -22,7 +22,7 @@
 struct NavStateReceiver {
   using DataType                         = nav_state_msg;
   static constexpr uint8_t parser_type   = ParserType::Receiver;
-  static constexpr uint16_t header       = 0x00;
+  static constexpr uint16_t header       = 0xDCDC;
   static constexpr size_t length         = 54;
   static constexpr std::string_view name = "nav_state_receiver";
 
