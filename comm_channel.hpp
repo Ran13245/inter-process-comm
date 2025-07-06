@@ -65,7 +65,7 @@ public:
   }
 
   CommChannel(asio::io_context &io_context, std::string_view local_path, std::string_view remote_path) requires(Mode == ChannelMode::Unix)
-      : local_endpoint_(createEp(local_path)), remote_endpoint_(createEp(remote_path)), socket_(io_context), timer_(io_context) {
+      : local_endpoint_(createEp(local_path)), remote_endpoint_(UnixEp(remote_path)), socket_(io_context), timer_(io_context) {
     socket_.open();
     socket_.bind(local_endpoint_);
   }
