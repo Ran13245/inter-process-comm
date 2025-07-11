@@ -4,7 +4,7 @@ include_directories(${CMAKE_SOURCE_DIR}
 
 file(GLOB TEST_SOURCES "*.cpp")
 
-
+find_package(Threads REQUIRED)
 foreach(test_src ${TEST_SOURCES})
     get_filename_component(test_name ${test_src} NAME_WE)
 
